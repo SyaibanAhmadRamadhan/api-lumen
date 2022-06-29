@@ -16,12 +16,12 @@ return new class extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('nama');
-            $table->string('email')->unique();
+            $table->string('email');
             $table->string('password');
-            $table->string('role');
+            $table->enum('role', ["admin", "member"])->default("member");
             $table->string('jenisKelamin');
             $table->string('alamat');
-            $table->string('foto');
+            $table->string('foto')->type('longtext');
             $table->timestamps();
         });
     }
@@ -34,6 +34,5 @@ return new class extends Migration
     public function down()
     {
         Schema::dropIfExists('users');
-        $table->string('token')->nullable();
     }
 };

@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('jenis');
             $table->string('dosis');
             $table->string('deskripsi');
-            $table->string('foto');
+            $table->string('foto')->type('longtext');
             $table->timestamps();
         });
     }

@@ -21,27 +21,32 @@ class AuthController extends Controller
 
     public function register(Request $request)
     {
-        $validasi = $this->validate($request, [
-            'nama' => 'required|max:255',
-            'email'=> 'required|email|max:255|unique:users,email',
-            'password' => 'required',
-            'alamat'=> 'required',
-            'role'=>'required|in:admin,user',
-            'jenisKelamin'=> 'required|in:pria,wanita',
-            'foto'=> 'required|image|mimes:jpeg,png,jpg,gif,svg'
-            // 'foto'=>'required',
-        ]);
-        $user = new Users();
-        $user->nama = $validasi['nama'];
-        $user->email = $validasi['email'];
-        $user->password=Hash::make($validasi['password']);
-        $user->alamat=$validasi['alamat'];
-        $user->role=$validasi['role'];
-        $user->jenisKelamin=$validasi['jenisKelamin'];
-        $user->foto=$request->file('foto')->getClientOriginalName();
-        // $user->foto = $request->foto;
-        $user->save();
-        return response()->json($user,201);
+        $nama = $request->input("nama");
+        $email = $request->input("email");
+        $password = Hash::make($request->input("password"));
+        $foto = $request->input("foto");
+        $alamat = $request->input("alamat");
+        $role = $request->input("role");
+        $jenisKelamin = $request->input("jenisKelamin");
+        $user = Users::query()->firstWhere(["email"=>$email]);
+            if ($user){
+                return $this->responseHasil(400,false,"alamat email telah digunakan");
+            }
+        try {
+            
+            Users::create([
+                "nama" => $nama,
+                "email" => $email, 
+                "password" => $password,
+                "foto" => $foto,
+                "alamat" => $alamat,
+                "role" => $role,
+                "jenisKelamin"=>$jenisKelamin,
+            ]);
+        }catch (\Eception $e){
+            return $this->responseHasil(500, false, $e->getPrevious()->getMessage());
+        }
+        return $this->responseHasil(200,true,"register berhasil");
     }
 
     public function login(Request $request)
@@ -55,7 +60,7 @@ class AuthController extends Controller
         }
 
         if (empty($user)){
-            return $this->responseHasil(400,false,"password tidak terdaftar");
+            return $this->responseHasil(400,false,"mail tidak terdaftar");
         }
 
         if (!Hash::check($password, $user->password)) {
