@@ -18,24 +18,29 @@ class productObatController extends Controller
 
     public function InsertObat(Request $request)
     {
-        $obat = new productObat();
-        $validasi = $this->validate($request,[
-            // 'foto'=>'required|image|mimes:jpeg,png,jpg,gif,svg',
-            'foto'=>'required',
-            'nama'=>'required|unique:productobat,nama',
-            'dosis'=>'required',
-            'jenis'=>'required',
-            'deskripsi'=>'required'
-        ]);
-        $obat->nama = $request->nama;
-        $obat->jenis = $request->jenis;
-        $obat->dosis = $request->dosis;
-        $obat->deskripsi = $request->deskripsi;
-        // $obat->foto = $request->file('foto')->getClientOriginalName();
-        
-        $obat->foto = $request->foto;
-        $obat->save();
-        return response()->json($obat);
+        $nama = $request->input('nama');
+        $jenis = $request->input('jenis');
+        $dosis = $request->input('dosis');
+        $deskripsi = $request->input('deskripsi');
+        $foto = $request->input('foto');
+        $obat = productObat::query()->firstWhere(["nama"=>$nama]);
+        if ($obat){
+            return $this->responseHasil(400,false,"nama obat sudah terdaftar");
+        }
+        try {
+            $obat2 = productObat::create([
+                "nama" => $nama,
+                "jenis" => $jenis, 
+                "dosis" => $dosis,
+                "foto" => $foto,
+                "deskripsi" => $deskripsi,
+            ]);
+        }catch (\Eception $e){
+            return $this->responseHasil(500, false, $e->getPrevious()->getMessage());
+        }
+        return $this->responseHasil(200,true,"tambah obat berhasil berhasil");
+        // return response()->json($obat);
+
     }
 
     public function ShowAllDataObat()
@@ -55,25 +60,26 @@ class productObatController extends Controller
 
     public function UpdateObat(Request $request, $id)
     {
-        $obat = productObat::find($id);
-        if(empty($obat)){
-            abort(401,"data obat tidak ditemukan");
+        $foto = $request->foto;
+        $nama = $request->nama;
+        $dosis = $request->dosis;
+        $jenis = $request->jenis;
+        $deskripsi = $request->deskripsi;
+        try {
+            $obat = productObat::findOrFail($id);
+        }catch (\Exception $e) {
+            return $this->responseHasil(500, false, $e->getPrevious()->getMessage());
         }
-        $validasi = $this->validate($request,[
-            'foto'=>'required|image|mimes:jpeg,png,jpg,gif,svg',
-            // 'foto'=>'required',
-            'nama'=>'required|unique:productobat,nama',
-            'dosis'=>'required',
-            'jenis'=>'required',
-            'deskripsi'=>'required'
+        $result = $obat->update([
+            "nama" => $nama,
+            "jenis" => $jenis,
+            "dosis" => $dosis,
+            "deskripsi" => $deskripsi,
+            // "foto" => $foto,
         ]);
-        $obat->foto = $request->file('foto')->getClientOriginalName();
-        $obat->nama = $request->nama;
-        $obat->dosis = $request->dosis;
-        $obat->jenis = $request->jenis;
-        $obat->deskripsi = $request->deskripsi;
-        $obat->save();
-        return response()->json(['update'=>$obat]);
+        return $this->responseHasil(200, true, $result);
+
+        // return response()->json(['update'=>$obat]);
     }
 
     public function DeleteObat($id)
@@ -82,7 +88,7 @@ class productObatController extends Controller
         if(empty($obat)){
             abort(401,"data tidak ada");
         }
-        $obat->delete();
-        return response ()->json(['data didelete',$obat]);
+        $delete = $obat->delete();
+        return $this->responseHasil(200, true, $delete);
     }
 }

@@ -1,7 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
-use App\Models\Users;
+use App\Models\crudUser;
 use Illuminate\Http\Request;
 
 
@@ -19,54 +19,54 @@ class CrudUserController extends Controller
 
     public function ShowAllUser()
     {
-        $User = Users::orderBy('id','ASC')->get();
+        $User = crudUser::orderBy('id','ASC')->get();
         if(empty($User)){
             abort(401,'tidak ada user yang tersedia');
         }
         return response()->json($User);
     }
 
-    public function ShowDetailUser(Request $request, $id)
+    public function ShowDetailUser($id)
     {
-        $user = Users::where('id',$id)->first();
-        if(empty($user)){
-            abort(404, "data not found");
+        try{
+            // $user = Users::where('id',$id)->first();
+            $user = crudUser::findOrFail($id);
+        }catch (\Eception $e){
+            return $this->responseHasil(500, false, $e->getPrevious()->getMessage());
         }
-        return response()->json(['detailData'=>$user]);
+        return $this->responseHasil(200,true,$user);
     }
 
     public function updateUser(Request $request, $id)
     {
-        $user = Users::where('id',$id)->first();
-        if(empty($user)){
-            abort(404, "data not found");
+        $foto = $request->foto;
+        $nama = $request->nama;
+        $email = $request->email;
+        $alamat = $request->alamat;
+        $role = $request->role;
+        $jenisKelamin = $request->jenisKelamin;
+        try {
+            $user = crudUser::findOrFail($id);
+        }catch (\Exception $e) {
+            return $this->responseHasil(500, false, $e->getPrevious()->getMessage());
         }
-        $validasi = $this->validate($request, [
-            'nama' => 'required|max:255',
-            'email'=> 'required|email|max:255|unique:users,email',
-            'alamat'=> 'required',
-            'role'=>'required|in:admin,user',
-            'jenisKelamin'=> 'required|in:pria,wanita',
-            'foto'=> 'required|image|mimes:jpeg,png,jpg,gif,svg'
-            // 'foto'=>'required',
+
+        $result = $user->update([
+            "nama" => $nama,
+            "email" => $email,
+            "alamat" => $alamat,
+            "role" => $role,
+            "foto" => $foto,
+            "jenisKelamin"=>$jenisKelamin
         ]);
-        $user->nama = $request->nama;
-        $user->email =$request->email;
-        $user->alamat= $request->alamat;
-        $user->role=$request->role;
-        $user->jenisKelamin=$request->jenisKelamin;
-        $user->foto=$request->file('foto')->getClientOriginalName();
-        $user->save();
-        return response()->json(['update'=>$user]);
+        return $this->responseHasil(200, true, $result);
     }
 
     public function DeleteUser($id)
     {
-        $user = Users::where('id',$id)->first();
-        if(empty($user)){
-            abort(404,'data tidak ada');
-        }
-        $user->delete();
-        return response()->json(['delete'=>$user]);
+        $user = crudUser::find($id);
+       
+        $delete = $user->delete();
+        return $this->responseHasil(200, true, $delete);
     }
 }
