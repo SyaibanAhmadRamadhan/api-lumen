@@ -75,7 +75,7 @@ class productObatController extends Controller
             "jenis" => $jenis,
             "dosis" => $dosis,
             "deskripsi" => $deskripsi,
-            // "foto" => $foto,
+            "foto" => $foto,
         ]);
         return $this->responseHasil(200, true, $result);
 
